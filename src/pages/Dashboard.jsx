@@ -54,17 +54,43 @@ function Dashboard() {
             {/* Financial Stats Section */}
             <section className="stats-section">
                 <h2>Financial Overview</h2>
+
+                {/* Main Financial Metrics */}
                 <div className="stats-grid">
-                    <div className="stat-card">
+                    <div className="stat-card highlight">
                         <div className="stat-label">Total Collected</div>
                         <div className="stat-value">₹{stats.total_collected.toFixed(2)}</div>
                         <div className="stat-meta">{stats.total_transactions} transactions</div>
                     </div>
 
+                    <div className="stat-card" style={{ borderColor: '#facc15' }}>
+                        <div className="stat-label">💰 In Razorpay Balance</div>
+                        <div className="stat-value" style={{ color: '#facc15' }}>₹{stats.in_razorpay_balance.toFixed(2)}</div>
+                        <div className="stat-meta">{stats.razorpay_pending_count} pending settlement</div>
+                    </div>
+
+                    <div className="stat-card" style={{ borderColor: '#3b82f6' }}>
+                        <div className="stat-label">🏦 In Our Bank</div>
+                        <div className="stat-value" style={{ color: '#3b82f6' }}>₹{stats.in_our_bank.toFixed(2)}</div>
+                        <div className="stat-meta">{stats.settled_to_us_count} settled but unpaid</div>
+                    </div>
+
+                    <div className="stat-card" style={{ borderColor: '#22c55e' }}>
+                        <div className="stat-label">✅ Paid to Merchants</div>
+                        <div className="stat-value" style={{ color: '#22c55e' }}>₹{stats.total_settled_to_merchants.toFixed(2)}</div>
+                        <div className="stat-meta">{stats.paid_to_merchants_count} settled</div>
+                    </div>
+
+                    <div className="stat-card warning">
+                        <div className="stat-label">⏳ Pending Payouts</div>
+                        <div className="stat-value">₹{stats.pending_payouts_volume.toFixed(2)}</div>
+                        <div className="stat-meta">We owe merchants</div>
+                    </div>
+
                     <div className="stat-card">
-                        <div className="stat-label">Settled to Merchants</div>
-                        <div className="stat-value">₹{stats.total_settled_to_merchants.toFixed(2)}</div>
-                        <div className="stat-meta">Total payouts</div>
+                        <div className="stat-label">🚀 Total In Transit</div>
+                        <div className="stat-value">₹{stats.total_in_transit.toFixed(2)}</div>
+                        <div className="stat-meta">Razorpay + Our Bank</div>
                     </div>
 
                     <div className="stat-card">
@@ -83,12 +109,6 @@ function Dashboard() {
                         <div className="stat-label">GST Collected</div>
                         <div className="stat-value">₹{stats.total_gst.toFixed(2)}</div>
                         <div className="stat-meta">Tax liability</div>
-                    </div>
-
-                    <div className="stat-card warning">
-                        <div className="stat-label">Pending Payouts</div>
-                        <div className="stat-value">₹{stats.pending_payouts_volume.toFixed(2)}</div>
-                        <div className="stat-meta">To be settled</div>
                     </div>
                 </div>
             </section>
