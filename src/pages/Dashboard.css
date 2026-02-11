@@ -4,6 +4,39 @@
     gap: 3rem;
 }
 
+.dashboard-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.dashboard-nav .nav-link {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.dashboard-nav .nav-link:hover {
+    background: rgba(100, 116, 139, 0.2);
+    color: #e2e8f0;
+}
+
+.dashboard-nav .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+
 .stats-section h2,
 .merchants-section h2 {
     font-size: 1.5rem;

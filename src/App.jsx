@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import MerchantDetail from './pages/MerchantDetail';
+import AllMerchants from './pages/AllMerchants';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <main className="app-main">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/all-merchants" element={<AllMerchants />} />
             <Route path="/merchant/:merchantId" element={<MerchantDetail />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

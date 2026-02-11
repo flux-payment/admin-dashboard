@@ -51,6 +51,14 @@ function Dashboard() {
 
     return (
         <div className="dashboard">
+            {/* Navigation */}
+            <div className="dashboard-nav">
+                <button className="nav-link active">Financial Overview</button>
+                <button className="nav-link" onClick={() => navigate('/all-merchants')}>
+                    All Merchants →
+                </button>
+            </div>
+
             {/* Financial Stats Section */}
             <section className="stats-section">
                 <h2>Financial Overview</h2>

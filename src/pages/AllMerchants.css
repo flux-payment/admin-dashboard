@@ -1,0 +1,247 @@
+.all-merchants {
+    padding: 20px;
+}
+
+.all-merchants .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.all-merchants .header h2 {
+    font-size: 24px;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.all-merchants .filters {
+    display: flex;
+    gap: 10px;
+}
+
+.all-merchants .filters button {
+    padding: 8px 16px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.all-merchants .filters button:hover {
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+
+.all-merchants .filters button.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+.merchants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.merchant-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s;
+}
+
+.merchant-card:hover {
+    border-color: #4f46e5;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+}
+
+.merchant-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.merchant-card h3 {
+    font-size: 18px;
+    margin: 0 0 4px 0;
+    color: #1a1a1a;
+}
+
+.merchant-card .merchant-id {
+    font-size: 12px;
+    color: #999;
+    font-family: monospace;
+}
+
+.merchant-card .badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.merchant-card .badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.contact-info {
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.contact-info div {
+    margin: 4px 0;
+}
+
+.financial-summary {
+    margin: 15px 0;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f0f9ff;
+    border-radius: 8px;
+}
+
+.summary-item .label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.summary-item .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.summary-item .meta {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.status-breakdown {
+    margin: 15px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.status-item.paid {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+}
+
+.status-item.unpaid {
+    background: #fefce8;
+    border-left: 4px solid #facc15;
+}
+
+.status-item.pending {
+    background: #f8fafc;
+    border-left: 4px solid #cbd5e1;
+}
+
+.status-item .count {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.no-transactions {
+    text-align: center;
+    padding: 20px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.last-payout {
+    margin: 15px 0;
+    padding: 10px;
+    background: #ecfdf5;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #065f46;
+}
+
+.last-payout .utr {
+    margin-top: 4px;
+    font-size: 11px;
+    font-family: monospace;
+    color: #10b981;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-view {
+    background: #4f46e5;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #4338ca;
+}
+
+.btn-settle {
+    background: #facc15;
+    color: #1a1a1a;
+}
+
+.btn-settle:hover {
+    background: #eab308;
+}
+
+.no-merchants {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+.loading,
+.error {
+    text-align: center;
+    padding: 40px;
+    font-size: 16px;
+}
+
+.error {
+    color: #dc2626;
+}
