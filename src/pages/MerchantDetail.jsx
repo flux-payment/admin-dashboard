@@ -5,25 +5,38 @@ import './MerchantDetail.css';
 function MerchantDetail() {
     const { merchantId } = useParams();
     const navigate = useNavigate();
-    const [data, setData] = useState(null);
+
+    const [merchantInfo, setMerchantInfo] = useState(null);
+    const [transactions, setTransactions] = useState([]);
+    const [filter, setFilter] = useState('all'); // 'all', 'paid', 'unpaid', 'pending'
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [utrReference, setUtrReference] = useState('');
-    const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
-        fetchMerchantDetails();
+        fetchAllData();
     }, [merchantId]);
 
-    const fetchMerchantDetails = async () => {
+    const fetchAllData = async () => {
         try {
             setLoading(true);
             const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
-            const res = await fetch(`${API_BASE}/admin/payouts/${merchantId}`);
-            if (!res.ok) throw new Error('Failed to fetch merchant details');
-            const json = await res.json();
-            setData(json);
+
+            // Fetch merchant info and transactions in parallel
+            const [merchantRes, transactionsRes] = await Promise.all([
+                fetch(`${API_BASE}/admin/merchants/all`),
+                fetch(`${API_BASE}/admin/merchants/${merchantId}/transactions`)
+            ]);
+
+            if (!merchantRes.ok || !transactionsRes.ok) {
+                throw new Error('Failed to fetch data');
+            }
+
+            const allMerchants = await merchantRes.json();
+            const merchant = allMerchants.find(m => m.merchant_id === merchantId);
+            const txns = await transactionsRes.json();
+
+            setMerchantInfo(merchant);
+            setTransactions(txns);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -31,164 +44,175 @@ function MerchantDetail() {
         }
     };
 
-    const handleSettlePayment = async () => {
-        if (!utrReference.trim()) {
-            alert('Please enter a UTR/Reference');
-            return;
+    const filteredTransactions = transactions.filter(tx => {
+        if (filter === 'paid') return tx.payout_status === 'paid';
+        if (filter === 'unpaid') return (tx.status === 'settled_in_bank' || tx.status === 'settled') && tx.payout_status !== 'paid';
+        if (filter === 'pending') return tx.status === 'pending';
+        return true;
+    });
+
+    const getStatusBadge = (status, payoutStatus) => {
+        if (payoutStatus === 'paid') {
+            return <span className="status-badge paid">✅ Paid</span>;
         }
-
-        try {
-            setProcessing(true);
-            const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
-            const res = await fetch(`${API_BASE}/admin/payouts/mark-paid`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    merchant_id: merchantId,
-                    payment_ids: data.transactions.map(t => t.razorpay_payment_id),
-                    payout_reference: utrReference,
-                }),
-            });
-
-            if (!res.ok) throw new Error('Failed to process settlement');
-
-            const result = await res.json();
-            alert(`✅ Settlement successful!\nInvoice: ${result.invoice_number}\nNet Settled: ₹${result.net_settled.toFixed(2)}\n${result.email_sent ? 'Email sent to merchant' : 'Email not sent (no merchant email)'}`);
-            navigate('/');
-        } catch (err) {
-            alert('❌ Error: ' + err.message);
-        } finally {
-            setProcessing(false);
-            setShowModal(false);
+        if (status === 'settled_in_bank' || status === 'settled') {
+            return <span className="status-badge unpaid">🟡 Ready to Settle</span>;
         }
+        return <span className="status-badge pending">⚪ In Razorpay</span>;
     };
 
-    if (loading) return <div className="detail-loading">Loading merchant details...</div>;
-    if (error) return <div className="detail-error">Error: {error}</div>;
+    if (loading) return <div className="loading">Loading merchant details...</div>;
+    if (error) return <div className="error">Error: {error}</div>;
+    if (!merchantInfo) return <div className="error">Merchant not found</div>;
 
     return (
         <div className="merchant-detail">
-            {/* Header */}
-            <div className="detail-header">
-                <button className="btn-back" onClick={() => navigate('/')}>← Back to Dashboard</button>
-                <div className="merchant-info">
-                    <h1>{data.merchant_name}</h1>
-                    <p className="merchant-id">ID: {data.merchant_id}</p>
-                    {data.bank_details && <p className="bank-details">Bank: {data.bank_details}</p>}
-                </div>
-                <div className="header-actions">
-                    <div className="total-payable">
-                        <span>Total Payable</span>
-                        <strong>₹{data.total_payable.toFixed(2)}</strong>
+            {/* Header with Back Button */}
+            <button className="back-btn" onClick={() => navigate('/all-merchants')}>
+                ← Back to All Merchants
+            </button>
+
+            {/* Merchant Overview Card */}
+            <div className="overview-card">
+                <div className="overview-header">
+                    <div>
+                        <h1>{merchantInfo.merchant_name}</h1>
+                        <p className="merchant-id">ID: {merchantInfo.merchant_id}</p>
                     </div>
-                    <button
-                        className="btn-settle"
-                        onClick={() => setShowModal(true)}
-                        disabled={data.transactions.length === 0}
-                    >
-                        💸 Settle & Send Invoice
-                    </button>
+                    {merchantInfo.has_pending_payout && (
+                        <span className="urgent-badge">Pending Payout</span>
+                    )}
+                </div>
+
+                <div className="contact-grid">
+                    <div className="contact-item">
+                        <span className="label">Email</span>
+                        <span className="value">{merchantInfo.email || 'Not provided'}</span>
+                    </div>
+                    <div className="contact-item">
+                        <span className="label">Phone</span>
+                        <span className="value">{merchantInfo.phone || 'Not provided'}</span>
+                    </div>
+                    <div className="contact-item">
+                        <span className="label">Bank Account</span>
+                        <span className="value">
+                            {merchantInfo.bank_account ? `${merchantInfo.bank_ifsc} | ****${merchantInfo.bank_account.slice(-4)}` : 'Not provided'}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* Transactions Table */}
-            <section className="transactions-section">
-                <h2>Transaction Breakdown ({data.transactions.length} payments)</h2>
-                {data.transactions.length === 0 ? (
-                    <div className="no-transactions">No pending transactions</div>
-                ) : (
-                    <div className="transactions-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Payment ID</th>
-                                    <th>Method</th>
-                                    <th>Gross Amount</th>
-                                    <th>Bank Fee</th>
-                                    <th>Flux Fee</th>
-                                    <th>GST</th>
-                                    <th>Net Payout</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {data.transactions.map((txn) => (
-                                    <tr key={txn.razorpay_payment_id}>
-                                        <td className="payment-id">{txn.razorpay_payment_id}</td>
-                                        <td className="payment-method">{txn.payment_method.toUpperCase()}</td>
-                                        <td className="amount">₹{txn.amount_gross.toFixed(2)}</td>
-                                        <td className="fee">₹{txn.razorpay_fee_actual.toFixed(2)}</td>
-                                        <td className="fee">₹{txn.flux_fee_deducted.toFixed(2)}</td>
-                                        <td className="fee">₹{txn.gst_component.toFixed(2)}</td>
-                                        <td className="net-amount">₹{txn.net_payout.toFixed(2)}</td>
-                                        <td>
-                                            <span className="status-badge">{txn.status}</span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                            <tfoot>
-                                <tr className="total-row">
-                                    <td colSpan="2"><strong>TOTAL</strong></td>
-                                    <td className="amount">
-                                        <strong>₹{data.transactions.reduce((sum, t) => sum + t.amount_gross, 0).toFixed(2)}</strong>
-                                    </td>
-                                    <td className="fee">
-                                        <strong>₹{data.transactions.reduce((sum, t) => sum + t.razorpay_fee_actual, 0).toFixed(2)}</strong>
-                                    </td>
-                                    <td className="fee">
-                                        <strong>₹{data.transactions.reduce((sum, t) => sum + t.flux_fee_deducted, 0).toFixed(2)}</strong>
-                                    </td>
-                                    <td className="fee">
-                                        <strong>₹{data.transactions.reduce((sum, t) => sum + t.gst_component, 0).toFixed(2)}</strong>
-                                    </td>
-                                    <td className="net-amount">
-                                        <strong>₹{data.total_payable.toFixed(2)}</strong>
-                                    </td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+            {/* Payment Status Summary */}
+            <div className="status-summary">
+                <h2>Payment Status Summary</h2>
+                <div className="summary-grid">
+                    <div className="summary-card total">
+                        <div className="summary-label">Total Collected</div>
+                        <div className="summary-amount">₹{merchantInfo.total_collected.toFixed(2)}</div>
+                        <div className="summary-meta">{merchantInfo.total_transactions} transactions</div>
                     </div>
-                )}
-            </section>
-
-            {/* Settlement Modal */}
-            {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h2>Confirm Settlement</h2>
-                        <div className="modal-body">
-                            <p>You are about to settle <strong>₹{data.total_payable.toFixed(2)}</strong> to <strong>{data.merchant_name}</strong>.</p>
-                            <p>This will:</p>
-                            <ul>
-                                <li>Mark {data.transactions.length} transaction(s) as paid</li>
-                                <li>Generate a professional invoice</li>
-                                <li>Send the invoice to the merchant via email</li>
-                            </ul>
-                            <div className="form-group">
-                                <label htmlFor="utr">UTR / Payment Reference *</label>
-                                <input
-                                    id="utr"
-                                    type="text"
-                                    placeholder="Enter bank UTR or reference number"
-                                    value={utrReference}
-                                    onChange={(e) => setUtrReference(e.target.value)}
-                                    disabled={processing}
-                                />
-                            </div>
-                        </div>
-                        <div className="modal-actions">
-                            <button className="btn-cancel" onClick={() => setShowModal(false)} disabled={processing}>
-                                Cancel
-                            </button>
-                            <button className="btn-confirm" onClick={handleSettlePayment} disabled={processing || !utrReference.trim()}>
-                                {processing ? 'Processing...' : 'Confirm & Send Invoice'}
-                            </button>
-                        </div>
+                    <div className="summary-card paid">
+                        <div className="summary-label">✅ Paid</div>
+                        <div className="summary-amount">₹{merchantInfo.total_paid.toFixed(2)}</div>
+                        <div className="summary-meta">{merchantInfo.paid_transactions} settled</div>
+                    </div>
+                    <div className="summary-card unpaid">
+                        <div className="summary-label">🟡 Ready to Settle</div>
+                        <div className="summary-amount">₹{merchantInfo.pending_payout.toFixed(2)}</div>
+                        <div className="summary-meta">{merchantInfo.unpaid_transactions} transactions</div>
+                    </div>
+                    <div className="summary-card pending">
+                        <div className="summary-label">⚪ In Razorpay</div>
+                        <div className="summary-amount">₹{merchantInfo.in_razorpay_balance.toFixed(2)}</div>
+                        <div className="summary-meta">{merchantInfo.pending_transactions} pending</div>
                     </div>
                 </div>
-            )}
+            </div>
+
+            {/* All Transactions Table */}
+            <div className="transactions-section">
+                <div className="section-header">
+                    <h2>All Transactions ({transactions.length})</h2>
+                    <div className="transaction-filters">
+                        <button
+                            className={filter === 'all' ? 'active' : ''}
+                            onClick={() => setFilter('all')}
+                        >
+                            All ({transactions.length})
+                        </button>
+                        <button
+                            className={filter === 'paid' ? 'active' : ''}
+                            onClick={() => setFilter('paid')}
+                        >
+                            Paid ({transactions.filter(t => t.payout_status === 'paid').length})
+                        </button>
+                        <button
+                            className={filter === 'unpaid' ? 'active' : ''}
+                            onClick={() => setFilter('unpaid')}
+                        >
+                            Unpaid ({transactions.filter(t => (t.status === 'settled_in_bank' || t.status === 'settled') && t.payout_status !== 'paid').length})
+                        </button>
+                        <button
+                            className={filter === 'pending' ? 'active' : ''}
+                            onClick={() => setFilter('pending')}
+                        >
+                            Pending ({transactions.filter(t => t.status === 'pending').length})
+                        </button>
+                    </div>
+                </div>
+
+                <div className="table-container">
+                    <table className="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Amount</th>
+                                <th>Net</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Settlement ID</th>
+                                <th>Fees</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredTransactions.map((tx) => (
+                                <tr key={tx.payment_id}>
+                                    <td>
+                                        <code className="payment-id">{tx.payment_id}</code>
+                                    </td>
+                                    <td className="amount">₹{tx.amount_gross.toFixed(2)}</td>
+                                    <td className="net-amount">
+                                        {tx.amount_net > 0 ? `₹${tx.amount_net.toFixed(2)}` : '-'}
+                                    </td>
+                                    <td>{getStatusBadge(tx.status, tx.payout_status)}</td>
+                                    <td className="date">{tx.transaction_date}</td>
+                                    <td>
+                                        {tx.settlement_id ? (
+                                            <code className="settlement-id">{tx.settlement_id}</code>
+                                        ) : (
+                                            <span className="text-muted">-</span>
+                                        )}
+                                    </td>
+                                    <td className="fees">
+                                        {tx.razorpay_fee > 0 || tx.flux_fee > 0 ? (
+                                            <div className="fee-breakdown">
+                                                <div>RZP: ₹{tx.razorpay_fee.toFixed(2)}</div>
+                                                <div>Flux: ₹{tx.flux_fee.toFixed(2)}</div>
+                                            </div>
+                                        ) : '-'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {filteredTransactions.length === 0 && (
+                    <div className="no-transactions">
+                        No transactions found for filter "{filter}"
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
