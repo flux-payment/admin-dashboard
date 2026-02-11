@@ -17,10 +17,12 @@ function Dashboard() {
         try {
             setLoading(true);
 
+            const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+
             // Fetch stats and merchants in parallel
             const [statsRes, merchantsRes] = await Promise.all([
-                fetch('/admin/stats'),
-                fetch('/admin/payouts')
+                fetch(`${API_BASE}/admin/stats`),
+                fetch(`${API_BASE}/admin/payouts`)
             ]);
 
             if (!statsRes.ok || !merchantsRes.ok) {

@@ -19,7 +19,8 @@ function MerchantDetail() {
     const fetchMerchantDetails = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/admin/payouts/${merchantId}`);
+            const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+            const res = await fetch(`${API_BASE}/admin/payouts/${merchantId}`);
             if (!res.ok) throw new Error('Failed to fetch merchant details');
             const json = await res.json();
             setData(json);
@@ -38,7 +39,8 @@ function MerchantDetail() {
 
         try {
             setProcessing(true);
-            const res = await fetch('/admin/payouts/mark-paid', {
+            const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+            const res = await fetch(`${API_BASE}/admin/payouts/mark-paid`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
