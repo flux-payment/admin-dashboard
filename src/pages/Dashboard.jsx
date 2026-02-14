@@ -36,9 +36,13 @@ function Dashboard() {
                 throw new Error('Failed to fetch data');
             }
 
-            setStats(await statsRes.json());
-            setPendingPayouts(await payoutsRes.json());
-            setAllMerchants(await merchantsRes.json());
+            const statsData = await statsRes.json();
+            const payoutsData = await payoutsRes.json();
+            const merchantsData = await merchantsRes.json();
+
+            setStats(statsData);
+            setPendingPayouts(payoutsData || []); // Handle null from backend
+            setAllMerchants(merchantsData || []); // Handle null from backend
         } catch (err) {
             setError(err.message);
         } finally {
