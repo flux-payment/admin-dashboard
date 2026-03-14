@@ -7,6 +7,8 @@ function Dashboard() {
     const [pendingPayouts, setPendingPayouts] = useState([]);
     const [allMerchants, setAllMerchants] = useState([]);
     const [transactions, setTransactions] = useState([]);
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [showAudit, setShowAudit] = useState(false);
 
     const [settlementModal, setSettlementModal] = useState(null); // { merchant, amount, transactions }
     const [transactionModal, setTransactionModal] = useState(null); // { merchant }
@@ -140,10 +142,10 @@ function Dashboard() {
                     Settlements ({pendingPayouts.length})
                 </button>
                 <button
-                    className={activeTab === 'merchants' ? 'tab active' : 'tab'}
-                    onClick={() => setActiveTab('merchants')}
+                    className={activeTab === 'admin' ? 'tab active' : 'tab'}
+                    onClick={() => setActiveTab('admin')}
                 >
-                    All Merchants ({allMerchants.length})
+                    🛠️ Admin Tools
                 </button>
             </nav>
 
@@ -243,6 +245,172 @@ function Dashboard() {
                                 </button>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* TAB 4: Admin Tools */}
+            {activeTab === 'admin' && (
+                <div className="tab-content">
+                    <div className="admin-grid">
+                        {/* Section 1: Holiday Email */}
+                        <div className="admin-card">
+                            <h3>📧 Send Settlement Holiday Notice</h3>
+                            <p className="admin-desc">Notify all merchants with pending payouts about settlement delays.</p>
+                            
+                            <div className="admin-form">
+                                <div className="form-group">
+                                    <label>Reason for Delay</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="bank holidays" 
+                                        className="form-input" 
+                                        id="holiday-reason"
+                                        defaultValue="bank holidays"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Resuming Date</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="the next working day" 
+                                        className="form-input" 
+                                        id="holiday-resume"
+                                    />
+                                </div>
+                                <div className="admin-actions">
+                                    <button 
+                                        className="btn-secondary"
+                                        onClick={async () => {
+                                            const email = prompt("Enter email for preview:", "adityakksingh23@gmail.com");
+                                            if (!email) return;
+                                            const reason = document.getElementById('holiday-reason').value;
+                                            const resume = document.getElementById('holiday-resume').value;
+                                            try {
+                                                setProcessing(true);
+                                                const res = await fetch(`${API_BASE}/admin/test-holiday?email=${encodeURIComponent(email)}&reason=${encodeURIComponent(reason)}&resume=${encodeURIComponent(resume)}`);
+                                                if (res.ok) alert("✅ Preview email sent!");
+                                                else throw new Error("Failed to send preview");
+                                            } catch (err) {
+                                                alert("❌ Error: " + err.message);
+                                            } finally {
+                                                setProcessing(false);
+                                            }
+                                        }}
+                                    >
+                                        Send Preview
+                                    </button>
+                                    <button 
+                                        className="btn-primary"
+                                        onClick={async () => {
+                                            const reason = document.getElementById('holiday-reason').value;
+                                            const resume = document.getElementById('holiday-resume').value;
+                                            if (!confirm(`Are you sure you want to send this notice to ALL merchants?`)) return;
+                                            
+                                            try {
+                                                setProcessing(true);
+                                                const res = await fetch(`${API_BASE}/admin/settlement-holiday?reason=${encodeURIComponent(reason)}&resume=${encodeURIComponent(resume)}`, {
+                                                    method: 'POST'
+                                                });
+                                                const data = await res.json();
+                                                alert(`✅ Success! Sent: ${data.sent || 0}, Failed: ${data.failed || 0}`);
+                                            } catch (err) {
+                                                alert("❌ Error: " + err.message);
+                                            } finally {
+                                                setProcessing(false);
+                                            }
+                                        }}
+                                    >
+                                        🚀 Send to All Merchants
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section 2: Reconciliation */}
+                        <div className="admin-card">
+                            <h3>🔄 Reprocess Settlements</h3>
+                            <p className="admin-desc">Force backend to reconcile missing settlements from Razorpay Route.</p>
+                            <button 
+                                className="btn-secondary"
+                                style={{marginTop: 'auto'}}
+                                onClick={async () => {
+                                    try {
+                                        setProcessing(true);
+                                        const res = await fetch(`${API_BASE}/admin/reprocess-settlements`, { method: 'POST' });
+                                        if (res.ok) {
+                                            alert("✅ Reconciliation triggered successfully!");
+                                            fetchAllData();
+                                        } else {
+                                            throw new Error("Failed to trigger reconciliation");
+                                        }
+                                    } catch (err) {
+                                        alert("❌ Error: " + err.message);
+                                    } finally {
+                                        setProcessing(false);
+                                    }
+                                }}
+                            >
+                                Trigger Reconciliation
+                            </button>
+                        </div>
+
+                        {/* Section 3: Audit Logs */}
+                        <div className="admin-card full-width">
+                            <h3>📋 Payout Audit Log</h3>
+                            <p className="admin-desc">Historical record of all settlements and invoices.</p>
+                            <button 
+                                className="btn-secondary"
+                                onClick={async () => {
+                                    try {
+                                        setProcessing(true);
+                                        const res = await fetch(`${API_BASE}/admin/payout-audit`);
+                                        const data = await res.json();
+                                        setAuditLogs(data.records || []);
+                                        setShowAudit(true);
+                                    } catch (err) {
+                                        alert("❌ Error loading audit: " + err.message);
+                                    } finally {
+                                        setProcessing(false);
+                                    }
+                                }}
+                            >
+                                View Recent Payouts
+                            </button>
+                            
+                            {showAudit && auditLogs.length > 0 && (
+                                <div className="audit-table-container">
+                                    <table className="audit-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Merchant</th>
+                                                <th>Amount</th>
+                                                <th>Invoice</th>
+                                                <th>Ref</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {auditLogs.slice(0, 10).map((log, idx) => (
+                                                <tr key={idx}>
+                                                    <td>{log.payout_date || log.payment_date}</td>
+                                                    <td>{log.merchant_name}</td>
+                                                    <td>₹{log.net_payout.toFixed(2)}</td>
+                                                    <td>
+                                                        {log.invoice_number ? (
+                                                            <a href={`${API_BASE}/admin/payout-audit/${log.invoice_number}/invoice`} target="_blank" rel="noreferrer">
+                                                                {log.invoice_number}
+                                                            </a>
+                                                        ) : '—'}
+                                                    </td>
+                                                    <td><small>{log.payout_reference}</small></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
