@@ -48,7 +48,11 @@ export default function Sidebar() {
   useEffect(() => {
     fetch(`${API}/admin/payouts`)
       .then(r => r.json())
-      .then(d => setPendingCount(d.pending_count || (d.merchants || []).length || 0))
+      .then(d => {
+        if (!d) return;
+        const list = Array.isArray(d) ? d : (d.merchants || []);
+        setPendingCount(d.pending_count ?? list.length ?? 0);
+      })
       .catch(() => {});
   }, []);
 

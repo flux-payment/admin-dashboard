@@ -18,9 +18,11 @@ export default function Settlements() {
       fetch(`${API}/admin/merchants/all`).then(r => r.json()),
     ])
       .then(([pData, mData]) => {
-        setPayouts(pData.merchants || []);
+        const pendingList = Array.isArray(pData) ? pData : (pData?.merchants || []);
+        setPayouts(pendingList);
         const map = {};
-        (mData.merchants || []).forEach(m => { map[m.merchant_id] = m; });
+        const merchantList = Array.isArray(mData) ? mData : (mData?.merchants || []);
+        merchantList.forEach(m => { map[m.merchant_id] = m; });
         setMerchants(map);
       })
       .catch(() => showToast('Failed to load settlements', 'error'))

@@ -18,7 +18,7 @@ export default function Overview() {
     ])
       .then(([s, p]) => {
         setStats(s);
-        setPayouts(p.merchants || []);
+        setPayouts(Array.isArray(p) ? p : (p?.merchants || []));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
