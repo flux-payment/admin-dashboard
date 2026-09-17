@@ -188,6 +188,7 @@ function SettleModal({ payout, merchant, onClose, onSuccess }) {
         throw new Error(txt || 'Server error');
       }
       showToast(`Settlement recorded for ${payout.merchant_name}`, 'success');
+      window.dispatchEvent(new CustomEvent('flux:settlement-recorded'));
       onSuccess(payout.merchant_id);
     } catch (err) {
       showToast(err.message || 'Settlement failed', 'error');

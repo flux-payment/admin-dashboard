@@ -45,7 +45,7 @@ const IC = {
 export default function Sidebar() {
   const [pendingCount, setPendingCount] = useState(0);
 
-  useEffect(() => {
+  const fetchCount = () => {
     fetch(`${API}/admin/payouts`)
       .then(r => r.json())
       .then(d => {
@@ -54,6 +54,13 @@ export default function Sidebar() {
         setPendingCount(d.pending_count ?? list.length ?? 0);
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchCount();
+    // Re-fetch when a settlement is recorded anywhere in the app
+    window.addEventListener('flux:settlement-recorded', fetchCount);
+    return () => window.removeEventListener('flux:settlement-recorded', fetchCount);
   }, []);
 
   const navClass = ({ isActive }) => isActive ? 'nav-item active' : 'nav-item';
