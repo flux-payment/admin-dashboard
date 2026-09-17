@@ -179,7 +179,7 @@ function SettleModal({ payout, merchant, onClose, onSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           merchant_id: payout.merchant_id,
-          utr_number: utr.trim(),
+          payout_reference: utr.trim(),
           payment_ids: payout.payment_ids || [],
         }),
       });
