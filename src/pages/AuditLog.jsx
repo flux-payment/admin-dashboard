@@ -27,6 +27,7 @@ export default function AuditLog() {
   });
 
   const invoiceUrl = (id) => `${API}/admin/payout-audit/${id}/invoice`;
+  const receiptUrl = (id) => `${API}/admin/payments/${id}/receipt`;
 
   if (loading) return (
     <div className="loading-state">
@@ -76,6 +77,7 @@ export default function AuditLog() {
                 <th>Invoice #</th>
                 <th>UTR / Reference</th>
                 <th>Invoice</th>
+                <th>Receipt</th>
               </tr>
             </thead>
             <tbody>
@@ -115,6 +117,17 @@ export default function AuditLog() {
                     ) : (
                       <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>—</span>
                     )}
+                  </td>
+                  <td>
+                    <a
+                      href={receiptUrl(r.payment_id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-ghost btn-sm"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      View Receipt
+                    </a>
                   </td>
                 </tr>
               ))}
