@@ -82,7 +82,7 @@ export default function AuditLog() {
             </thead>
             <tbody>
               {filtered.map((r, i) => (
-                <tr key={r.payout_id || i}>
+                <tr key={r.payment_id || i}>
                   <td>{fmtDate(r.payout_date || r.payment_date || r.created_at)}</td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -99,18 +99,20 @@ export default function AuditLog() {
                       : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                   </td>
                   <td>
-                    {r.payout_reference || r.utr_number
-                      ? <span className="mono">{r.payout_reference || r.utr_number}</span>
+                    {r.payout_reference
+                      ? <span className="mono">{r.payout_reference}</span>
                       : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                   </td>
                   <td>
-                    {r.payout_id && (
+                    {r.invoice_number ? (
                       <button
                         className="btn btn-ghost btn-sm"
-                        onClick={() => handleInvoice(r.payout_id)}
+                        onClick={() => handleInvoice(r.invoice_number)}
                       >
-                        View PDF
+                        View Invoice
                       </button>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>—</span>
                     )}
                   </td>
                 </tr>
