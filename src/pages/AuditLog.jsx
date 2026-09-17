@@ -119,15 +119,19 @@ export default function AuditLog() {
                     )}
                   </td>
                   <td>
-                    <a
-                      href={receiptUrl(r.payment_id)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-ghost btn-sm"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      View Receipt
-                    </a>
+                    {r.has_receipt ? (
+                      <a
+                        href={receiptUrl(r.payment_id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-ghost btn-sm"
+                        style={{ textDecoration: 'none' }}
+                      >
+                        View Receipt
+                      </a>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>—</span>
+                    )}
                   </td>
                 </tr>
               ))}
