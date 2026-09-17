@@ -26,9 +26,7 @@ export default function AuditLog() {
     );
   });
 
-  const handleInvoice = async (id) => {
-    window.open(`${API}/admin/payout-audit/${id}/invoice`, '_blank');
-  };
+  const invoiceUrl = (id) => `${API}/admin/payout-audit/${id}/invoice`;
 
   if (loading) return (
     <div className="loading-state">
@@ -105,12 +103,15 @@ export default function AuditLog() {
                   </td>
                   <td>
                     {r.invoice_number ? (
-                      <button
+                      <a
+                        href={invoiceUrl(r.invoice_number)}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="btn btn-ghost btn-sm"
-                        onClick={() => handleInvoice(r.invoice_number)}
+                        style={{ textDecoration: 'none' }}
                       >
                         View Invoice
-                      </button>
+                      </a>
                     ) : (
                       <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>—</span>
                     )}
